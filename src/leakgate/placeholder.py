@@ -21,7 +21,7 @@ FILLER_WORDS = frozenset({
 })
 # Substrings that mark a whole match as code/documentation, not a literal value.
 CODE_MARKERS = ("...", "<", ">", "${", "$(", "{{", "os.environ", "getenv", "process.env",
-                "env(", "secrets.", "vault:", "[redacted", "***")
+                "env(", "env:", "secrets.", "vault:", "op://", "[redacted", "***")
 # Well-known published example credentials (vendor docs).
 DOC_EXAMPLES = frozenset({
     "AKIAIOSFODNN7EXAMPLE",
@@ -65,6 +65,9 @@ def is_placeholder(value: str, context: str = "") -> bool:
     # SCREAMING_SNAKE name made only of letter words is an identifier or an
     # instruction, not a value. A digit anywhere keeps it suspect.
     if ENV_NAME.match(v) and all(seg.isalpha() for seg in v.split("_") if seg):
+        return True
+    # `your-openai-api-key-here`, `my_notion_token`: an instruction in words.
+    if re.match(r"(?i)^(?:your|my|insert|put|paste|enter)[-_]", v) and not re.search(r"\d{3}", v):
         return True
     body = VENDOR_PREFIX.sub("", v)
     if not body:

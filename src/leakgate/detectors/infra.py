@@ -70,9 +70,11 @@ RULES: list[Rule] = [
     ("sharepoint-tenant", re.compile(r"(?i)https?://(?P<v>[a-z0-9\-]+?)(?:-my|-admin)?\.sharepoint\.com"), _tenant),
     ("sharepoint-personal", re.compile(r"(?i)\.sharepoint\.com/personal/(?P<v>[A-Za-z0-9_.\-]+)"), _tenant),
     ("internal-host", re.compile(
+        # Bare hosts need two labels before the TLD and no trailing extension:
+        # `pre-commit.local` and `settings.local.json` are files, not machines.
         # `.internal` only after `@` or `://`: bare, it is a JS property or a
         # published cloud hostname (metadata.google.internal, ec2.internal).
-        r"(?i)(?<![\w.\-])(?P<v>(?:[a-z0-9_.\-]+@)?[a-z0-9\-]+(?:\.[a-z0-9\-]+)*\." + _INTERNAL_TLD + r")(?![\w\-])"
+        r"(?i)(?<![\w.\-])(?P<v>(?:[a-z0-9_.\-]+@)?[a-z0-9\-]+(?:\.[a-z0-9\-]+)+\." + _INTERNAL_TLD + r")(?![\w\-]|\.\w)"
         r"|(?:@|://)(?P<w>[a-z0-9\-]+(?:\.[a-z0-9\-]+)*\.(?-i:internal|intra))(?![\w\-])"),
      lambda m: m.group("v") or m.group("w")),
 ]

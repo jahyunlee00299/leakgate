@@ -70,6 +70,12 @@ def test_catches(line, rule):
     "contact: user@example.com",
     "git@github.com:org/repo.git",
     "/usr/local/bin/python and ~/project/data",
+    # false positives found auditing real public repositories
+    '"token": "ENV:NOTION_TOKEN"',
+    'api_key="your-openai-api-key-here"',
+    "AI 에이전트는 신입 연구원입니다",
+    "chains to `.git/hooks/pre-commit.local` first",
+    "`.claude/settings.local.json` is machine-local",
 ])
 def test_ignores(line):
     assert rules(line) == set()
