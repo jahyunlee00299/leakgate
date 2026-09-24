@@ -1,0 +1,5 @@
+# Organisation dictionary for the fictional project used in bench/corpus.py.
+[custom]
+terms = ["falconose", "project-falcon-core"]
+patterns = ['\bZqXDH\b', '\bv?(?:Vmax|Km)?,?QRS\b']
+metrics = ["MPSP", "yield", "titer"]

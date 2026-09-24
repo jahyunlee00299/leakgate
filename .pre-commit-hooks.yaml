@@ -1,0 +1,6 @@
+- id: leakgate
+  name: leakgate
+  description: Block secrets, Korean PII, local paths and private terms before commit
+  entry: leakgate scan
+  language: python
+  types: [text]

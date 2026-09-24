@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leakgate"
+version = "0.1.0"
+description = "Pre-publish gate for secrets, Korean PII, local paths and private project terms in repos and AI-agent transcripts."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = []
+keywords = ["secrets", "pii", "korean", "redaction", "pre-commit", "claude-code", "transcripts"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
+
+[project.optional-dependencies]
+korean = ["maskingtape>=0.3", "ko-pii>=1.16"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+leakgate = "leakgate.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
