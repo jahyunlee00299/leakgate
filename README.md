@@ -6,7 +6,7 @@ terms** — alongside ordinary API keys. Built for researchers who publish code,
 notebooks and AI-agent transcripts (Claude Code / Codex JSONL).
 
 ```bash
-pip install git+https://github.com/jahyunlee00299/leakgate   # stdlib only, Python 3.11+
+pip install leakgate                 # stdlib only, Python 3.11+
 leakgate scan .                      # report (exit 1 if anything found)
 leakgate redact logs/ --apply        # mask in place, JSONL-safe
 ```

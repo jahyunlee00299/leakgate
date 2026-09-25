@@ -13,6 +13,10 @@ dependencies = []
 keywords = ["secrets", "pii", "korean", "redaction", "pre-commit", "claude-code", "transcripts"]
 classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
 
+[project.urls]
+Homepage = "https://github.com/jahyunlee00299/leakgate"
+Issues = "https://github.com/jahyunlee00299/leakgate/issues"
+
 [project.optional-dependencies]
 korean = ["maskingtape>=0.3", "ko-pii>=1.16"]
 dev = ["pytest>=8"]
