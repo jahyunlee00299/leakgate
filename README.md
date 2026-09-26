@@ -129,7 +129,16 @@ allow = []                     # regexes; matching values are dropped
 terms = ["project-falcon"]     # codenames, private repo names
 patterns = ['\bZq[A-Z]{2}DH\b']
 metrics = ["yield", "titer"]   # flag a number within 40 chars of these
+names = ["김민준", "Jane Roe"]  # people you know: matched anywhere, even in bare prose
+names_files = ["people.txt"]   # one name per line, e.g. exported from a contact list
 ```
+
+Rules need a cue to find a name (`교수님`, `참석자:`); the people who actually
+leak from a lab's files are a known set, so `names` matches them anywhere:
+`김민준이 어제 보냈다`, `김 민준`, `담당은 김민준이다`, and for Latin names the
+reorderings `Kim Minjun`, `Kim, Minjun`, `M. Kim`, `Kim, M.`. A Korean name
+followed by anything but a particle, the copula or a title is left alone, so
+`김민준호` (someone else) and `정민수` do not match `김민준` / `정민`.
 
 ## Scope and limits
 
@@ -138,7 +147,7 @@ removed in a later commit is still in the history; use `gitleaks git` or
 `git log -p | leakgate scan -`, then rewrite history (git-filter-repo) **and
 revoke the credential**. Redaction is never a substitute for rotation. Name
 detection is rule-based (titles, labels, lists): a bare name in running prose
-is not caught.
+is not caught unless it is in your `names` list.
 
 ## 한국어 요약
 

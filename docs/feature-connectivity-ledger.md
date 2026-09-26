@@ -53,3 +53,19 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
   (dev 22/14/8/6 FP 0, heldout2 43/27/17 FP 1).
 - **Deferred**: legacy `.hwp/.doc/.xls` readers (OLE compound files; reported
   UNSCANNED); OCR of scanned PDFs; EXIF/GPS metadata in photos; a 40 MB PDF takes ~2 min.
+
+## 0.2.0 — known people (sub-feature)
+- **In/out**: `[custom] names` + `names_files` (one name per line, `#` comments) →
+  `PeopleDetector` → `pii/known-person`; redacts to `[PII:known-person]` with the
+  particle kept.
+- **Evidence**: `tests/test_people.py` (18 cases: bare prose, copula, spaced surname,
+  compound surname, 2-syllable + particle, lists, Latin reorderings and case, names_files,
+  redaction, 2 000-name speed; must-not: `정민수`, `공정민감도`, `김민준호`,
+  `Kimberly Minjunson`, `Mkim.dev`).
+- **Refutation**: first version failed its own tests twice — an unbounded 3-syllable
+  match took `김민준호` for `김민준`, and `\w` boundaries (which count Hangul) missed
+  `J. Roe에게`. Both fixed; removing either guard turns a test red. Real files with a
+  30-name list: 1 610 hits, all at tab/comma/end-of-line/particle boundaries, none
+  inside a longer word.
+- **Deferred**: a 2-syllable name that is also a common noun (`하늘이`) still matches;
+  given-name-only mentions (`민준이가`) need the given name listed separately.

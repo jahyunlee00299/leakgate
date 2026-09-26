@@ -16,6 +16,7 @@ src/leakgate/
     kr_pii.py       Korean PII + email/card
     infra.py        home-path usernames, tenants, private IPs, internal hosts
     custom.py       organisation dictionary (terms / patterns / metric-number)
+    people.py       known-people names matched in bare prose (Korean particles, Latin reorderings)
     known_values.py literal matching of the user's own secret values
     external.py     optional gitleaks / maskingtape / ko-pii adapters
 bench/              corpora (dev, heldout, heldout2) and run.py

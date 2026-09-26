@@ -15,6 +15,7 @@ from leakgate.detectors.external import ENGINES
 from leakgate.detectors.infra import InfraDetector
 from leakgate.detectors.known_values import KnownValueDetector, load_values
 from leakgate.detectors.kr_pii import KoreanPiiDetector
+from leakgate.detectors.people import PeopleDetector
 from leakgate.detectors.secrets import SecretDetector
 from leakgate.finding import Finding
 
@@ -58,6 +59,8 @@ class Scanner:
             self.detectors.append(SecretDetector())
         if "pii" in cats:
             self.detectors.append(KoreanPiiDetector())
+            if config.names:
+                self.detectors.append(PeopleDetector(config.names))
         if "infra" in cats:
             self.detectors.append(InfraDetector())
         if "custom" in cats and (config.terms or config.patterns or config.metrics):

@@ -34,6 +34,11 @@ patterns = []
 # Metric words whose nearby NUMBER is sensitive, e.g. ["yield", "titer", "MPSP"].
 metrics = []
 metric_window = 40
+# People you know (colleagues, students, collaborators). Matched anywhere, even in
+# bare prose: Korean with particles ("김민준이"), Latin with reorderings ("Kim, M.").
+names = []
+# Files with one name per line (e.g. generated from a contact list), relative to this file.
+names_files = []
 '''
 
 
@@ -48,7 +53,20 @@ class Config:
     patterns: list[str] = field(default_factory=list)
     metrics: list[str] = field(default_factory=list)
     metric_window: int = 40
+    names: list[str] = field(default_factory=list)
     base_dir: Path = field(default_factory=Path.cwd)
+
+
+def _read_names(base: Path, files: list[str]) -> list[str]:
+    out: list[str] = []
+    for f in files:
+        fp = Path(f).expanduser()
+        fp = fp if fp.is_absolute() else base / fp
+        for line in fp.read_text(encoding="utf-8").splitlines():
+            line = line.split("#", 1)[0].strip()
+            if line:
+                out.append(line)
+    return out
 
 
 def load(path: str | Path | None = None, search_from: Path | None = None) -> Config:
@@ -78,5 +96,6 @@ def load(path: str | Path | None = None, search_from: Path | None = None) -> Con
         patterns=custom.get("patterns", []),
         metrics=custom.get("metrics", []),
         metric_window=int(custom.get("metric_window", 40)),
+        names=[*custom.get("names", []), *_read_names(p.parent, custom.get("names_files", []))],
         base_dir=p.parent,
     )
