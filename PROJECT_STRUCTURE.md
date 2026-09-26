@@ -20,7 +20,7 @@ src/leakgate/
     people.py       known-people names matched in bare prose (Korean particles, Latin reorderings)
     known_values.py literal matching of the user's own secret values
     external.py     optional gitleaks / maskingtape / ko-pii adapters
-bench/              corpora (dev, heldout, heldout2) and run.py
+bench/              corpora (dev, heldout, heldout2, heldout3 = the 0.2.0 blind set) and run.py
 tests/              contract tests; credential-shaped values generated at runtime
 docs/               feature-connectivity ledger
 ```
