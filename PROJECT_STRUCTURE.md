@@ -5,6 +5,7 @@ src/leakgate/
   cli.py            scan / redact / init; exit codes 0 clean, 1 findings, 2 error
   scanner.py        builds detectors from config, walks files, suppression, dedupe
   extract.py        text out of docx/xlsx/pptx/hwpx/odf zips, PDF (pypdf), images (tesseract)
+  history.py        added lines of every commit (git log -p) + pre-push hook installer
   redact.py         span replacement with JSON/JSONL, binary and atomic-write guards
   report.py         text / json / sarif renderers (never print raw values)
   config.py         .leakgate.toml loading

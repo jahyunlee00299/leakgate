@@ -69,3 +69,20 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
   inside a longer word.
 - **Deferred**: a 2-syllable name that is also a common noun (`하늘이`) still matches;
   given-name-only mentions (`민준이가`) need the given name listed separately.
+
+## 0.2.0 — git history and pre-push hook (sub-feature)
+- **In/out**: `scan --history [--rev RANGE] REPO` → `git log -p --unified=0` → added lines
+  per (commit, file) → detectors; `where = "commit <sha10>"`, line = line number in that
+  version. Document blobs (by extension, whatever git calls them) → `git show` → extract.
+  `hook install` writes `.git/hooks/pre-push` that runs `--history --rev <remote>..<local>`.
+- **Evidence**: `tests/test_history.py` (6 cases): a key deleted in a later commit is found
+  once at its commit and line; `--rev` limits scope; a docx committed then deleted is
+  extracted; Korean path; empty repo = 0, non-repo = 2; **end-to-end push to a bare remote
+  is blocked and the remote keeps its old head**; a foreign hook is never clobbered
+  without `--force`.
+- **Refutation**: an uncompressed docx diffed as text made git's binary flag wrong —
+  documents now go through the extractor by extension. `REMAINDER` swallowed `--force`
+  (replaced by `--scan-args=`). Mutations (hook ignores the exit code / no document
+  extraction) each fail a test. Real repos: 72 commits in 2 s; 4 077 commits in 149 s.
+- **Deferred**: reachable-but-unreferenced objects (reflog, dangling) are not scanned;
+  history rewriting itself is left to git-filter-repo.

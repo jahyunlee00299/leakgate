@@ -73,6 +73,9 @@ with no fixed prefix (Kakao, 공공데이터포털, Airtable, Docker Hub).
 
 ```bash
 leakgate scan PATH...                    # text report, exit 0 clean / 1 findings / 2 error
+leakgate scan --history .                # every line the git history ever added
+leakgate scan --history --rev origin/main..HEAD .   # only what you are about to push
+leakgate hook install                    # pre-push hook: block a push that adds a leak
 leakgate scan . --format sarif > r.sarif # for GitHub code scanning
 leakgate scan - < transcript.jsonl       # stdin
 leakgate scan . --known-secrets ~/.secrets/secrets.json
@@ -142,10 +145,13 @@ followed by anything but a particle, the copula or a title is left alone, so
 
 ## Scope and limits
 
-leakgate scans the working tree. It does **not** read git history — a secret
-removed in a later commit is still in the history; use `gitleaks git` or
-`git log -p | leakgate scan -`, then rewrite history (git-filter-repo) **and
-revoke the credential**. Redaction is never a substitute for rotation. Name
+A secret removed in a later commit is still in every clone. `scan --history`
+reads what each commit **added** (so a value is reported once, at the commit
+that introduced it, with its line number there), including documents committed
+and later deleted. `hook install` adds a pre-push hook that scans only the
+outgoing commits; pass hook options with `--scan-args="--known-secrets ~/s.json"`.
+Finding a leak in history means rewriting it (git-filter-repo) **and revoking
+the credential** — redaction is never a substitute for rotation. Name
 detection is rule-based (titles, labels, lists): a bare name in running prose
 is not caught unless it is in your `names` list.
 

@@ -8,11 +8,12 @@ ran with fewer checks than you asked for is not a gate.
 from __future__ import annotations
 
 import argparse
+import shlex
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-from leakgate import __version__, config as cfgmod, report
+from leakgate import __version__, config as cfgmod, history, report
 from leakgate.redact import UnsafeRedaction, redact_file
 from leakgate.scanner import Scanner
 
@@ -58,6 +59,11 @@ def cmd_scan(args) -> int:
     sc = _build(args)
     if args.paths == ["-"]:
         findings, n = sc.scan_text(sys.stdin.read(), "<stdin>"), 1
+    elif args.history:
+        findings, n = [], 0
+        for repo in args.paths:
+            f, k = history.scan_history(sc, Path(repo), shlex.split(args.rev) if args.rev else None)
+            findings, n = findings + f, n + k
     else:
         findings, n = sc.scan_paths(args.paths)
     print(report.RENDERERS[args.format](findings, n, sc.unavailable, sc.unscanned, sc.images_skipped))
@@ -99,6 +105,12 @@ def cmd_redact(args) -> int:
     return 1 if total else 0
 
 
+def cmd_hook(args) -> int:
+    hook = history.install_hook(Path(args.repo), shlex.split(args.scan_args), force=args.force)
+    print(f"wrote {hook} — pushes are scanned for what they add (bypass once: git push --no-verify)")
+    return 0
+
+
 def cmd_init(args) -> int:
     target = Path(args.dir) / cfgmod.CONFIG_NAME
     if target.exists():
@@ -119,12 +131,23 @@ def main(argv: list[str] | None = None) -> int:
     s = sub.add_parser("scan", help="report findings (read-only)")
     _common(s)
     s.add_argument("--format", choices=sorted(report.RENDERERS), default="text")
+    s.add_argument("--history", action="store_true",
+                   help="scan every line the git history ever added (PATHS are repositories)")
+    s.add_argument("--rev", help="with --history: revisions to scan, as for `git log` "
+                                 "(default: all refs), e.g. 'origin/main..HEAD'")
     s.set_defaults(func=cmd_scan)
     r = sub.add_parser("redact", help="replace findings in place (dry-run unless --apply)")
     _common(r)
     r.add_argument("--apply", action="store_true")
     r.add_argument("--backup", action="store_true", help="keep <file>.leakgate.bak (raw bytes)")
     r.set_defaults(func=cmd_redact)
+    h = sub.add_parser("hook", help="install a git pre-push hook that scans outgoing commits")
+    h.add_argument("action", choices=["install"])
+    h.add_argument("repo", nargs="?", default=".")
+    h.add_argument("--force", action="store_true", help="replace a pre-push hook leakgate did not write")
+    h.add_argument("--scan-args", default="",
+                   help="extra `scan` options for the hook, e.g. --scan-args=\"--known-secrets ~/s.json\" (use =)")
+    h.set_defaults(func=cmd_hook)
     i = sub.add_parser("init", help=f"write a sample {cfgmod.CONFIG_NAME}")
     i.add_argument("dir", nargs="?", default=".")
     i.set_defaults(func=cmd_init)
