@@ -86,3 +86,17 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
   extraction) each fail a test. Real repos: 72 commits in 2 s; 4 077 commits in 149 s.
 - **Deferred**: reachable-but-unreferenced objects (reflog, dangling) are not scanned;
   history rewriting itself is left to git-filter-repo.
+
+## 0.2.0 — rules for the documented gaps (sub-feature)
+- **Added**: `docker-hub-token` (`dckr_pat_`/`dckr_oat_`), `airtable-token` (`pat…​.…`),
+  `kakao-api-key` and `data-go-kr-service-key` (no prefix: only with their name or
+  `serviceKey=` nearby), `kr-vehicle-plate` (middle syllable limited to the ones plates
+  use; optional province), `kr-student-employee-id` (학번/사번/직번/교번/student/employee id).
+- **Evidence**: 9 must-catch and 8 must-not lines in `tests/test_leakgate.py`
+  (`3층 1234호`, `12가지 1234개`, `Kakao Maps SDK v2.1.0`, `os.environ['KAKAO_REST_KEY']`,
+  a placeholder serviceKey, an empty 학번 field, `patient 12345`).
+- **Refutation**: 0 hits from the six new rules across 7 510 real files (210 documents,
+  7 300 code/text files in four repositories and the script folder).
+- **Honesty note**: heldout2 rose to 45/30/17 (FP 1) — but these rules came from the
+  gap list heldout2 itself produced, so heldout2 is no longer blind for them. The
+  honest number needs a new blind set (heldout3).

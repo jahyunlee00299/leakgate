@@ -153,6 +153,15 @@ RULES: list[Rule] = [
         r"(?:담당자?|검토자?|작성자?|저자|책임자|연락처|이름|성명|성함|보호자|신청인|대표자?|승인자?|결재자?|수신인?|발신인?"
         r"|참석자?|참여자|명단|구성원|위원)(?:\s*(?:목록|명단|명))?"
         r"\s*[:：]\s*(?P<v>[가-힣]{2,4}(?:\s*(?:[,、·/]|및)\s*[가-힣]{2,4})*)(?![가-힣])"), _name_list),
+    # Hangul in the middle is limited to the syllables plates actually use, so
+    # `3층 1234`, `12가지`, `2024년 3월` stay clean. Old regional plates carry a province.
+    ("kr-vehicle-plate", re.compile(
+        r"(?<![\d가-힣])(?P<v>(?:(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주)\s?)?"
+        r"\d{2,3}\s?[가나다라마거너더러머버서어저고노도로모보소오조구누두루무부수우주아바사자배하허호]\s?\d{4})(?!\d)"),
+     None),
+    ("kr-student-employee-id", re.compile(
+        r"(?i)(?:학번|사번|직번|교번|교직원\s?번호|student\s?(?:id|no\.?|number)|employee\s?(?:id|no\.?|number))"
+        r"\s*[:：#]?\s*(?P<v>[A-Z]{0,2}\d{6,10})(?!\d)"), None),
     ("kr-birthdate", re.compile(
         r"(?P<v>(?:[가-힣]{2,4}\s*\(?\s*)?(?:19|20)\d{2}\s*[.\-/년]\s*\d{1,2}\s*[.\-/월]\s*\d{1,2}\s*일?\.?\s*"
         r"(?:생|출생|년생))|(?:생년월일|생일|DOB|date of birth)\s*[:：]?\s*"
@@ -177,6 +186,8 @@ def _register_gates() -> None:
         gate(name, r"\d")
     for name in ("kr-address", "kr-name-title", "kr-name-labeled"):
         gate(name, hangul)
+    gate("kr-vehicle-plate", r"\d\s?[가-힣]\s?\d")
+    gate("kr-student-employee-id", r"(?i)학번|사번|직번|교번|교직원|student|employee")
 
 
 _register_gates()

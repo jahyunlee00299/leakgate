@@ -26,8 +26,8 @@ and can call the specialised tools as extra engines.
 
 | Axis | What it catches |
 | --- | --- |
-| `secret` | ~25 vendor formats, `KEY=`/`password:`/`비밀번호:` assignments, URLs with passwords, JWTs, private-key blocks — with placeholder discrimination (`<YOUR_KEY>`, `sk-xxxx`, `os.environ[...]` pass) |
-| `pii` | 주민/외국인등록번호 (checksum or post-2020 form), mobile/landline, email, card (Luhn + issuer), 사업자번호 (checksum), bank account/passport/licence (with context), road-name and lot-number addresses, names with titles, labels and lists, birth dates |
+| `secret` | ~30 vendor formats (incl. Docker Hub, Airtable; Kakao and 공공데이터포털 keys by context), `KEY=`/`password:`/`비밀번호:` assignments, URLs with passwords, JWTs, private-key blocks — with placeholder discrimination (`<YOUR_KEY>`, `sk-xxxx`, `os.environ[...]` pass) |
+| `pii` | 주민/외국인등록번호 (checksum or post-2020 form), mobile/landline, email, card (Luhn + issuer), 사업자번호 (checksum), bank account/passport/licence (with context), road-name and lot-number addresses, names with titles, labels and lists, birth dates, vehicle plates, student/employee IDs, and anyone on your `names` list |
 | `infra` | usernames in Windows / JSON-escaped / git-bash / POSIX / macOS home paths, OneDrive and SharePoint tenants, RFC 1918 and Tailscale/CGNAT addresses, internal hostnames |
 | `custom` | your own dictionary: codenames, private repo names, regexes, and **metric words whose nearby number is sensitive** (`yield`, `titer`, `MPSP`) |
 | known values | point it at your real secrets file (`--known-secrets secrets.json` / `.env`): every value is matched literally, so your own key is caught whatever its format. Values are never printed. |

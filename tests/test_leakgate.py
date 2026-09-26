@@ -48,6 +48,15 @@ def rules(text, **cfg):
     (lambda: '{"cwd": "C:\\\\Users\\\\jdoe"}', "windows-home-path"),
     (lambda: "ssh me@100.101.102.103", "private-ipv4"),
     (lambda: "https://contoso-my.sharepoint.com/personal/a_b", "sharepoint-tenant"),
+    (lambda: f"docker login -p dckr_pat_{tok(27)}", "docker-hub-token"),
+    (lambda: f"AIRTABLE=pat{tok(14)}.{tok(64, '0123456789abcdef')}", "airtable-token"),
+    (lambda: f"Authorization: KakaoAK {tok(32, '0123456789abcdef')}", "kakao-api-key"),
+    (lambda: f"?serviceKey={tok(40)}%2B{tok(30)}%3D%3D&numOfRows=10", "data-go-kr-service-key"),
+    (lambda: "차량번호 12가 3456 주차", "kr-vehicle-plate"),
+    (lambda: "서울 34나 5678", "kr-vehicle-plate"),
+    (lambda: "123허4567 렌터카", "kr-vehicle-plate"),
+    (lambda: "학번: 2019123456", "kr-student-employee-id"),
+    (lambda: "Employee ID #A1234567", "kr-student-employee-id"),
 ])
 def test_catches(line, rule):
     assert rule in rules(line())
@@ -80,6 +89,15 @@ def test_catches(line, rule):
     "patent 8001011234567, 1999.",
     "1999/A:8001011234567",
     "table 1 234 4539 1488 0343 6467 2345",
+    # new 0.2.0 rules: ordinary text that looks close
+    "3층 1234호 회의실",
+    "12가지 1234개의 샘플",
+    "2024년 3월 12일",
+    "Kakao Maps SDK v2.1.0",
+    "kakao_key = os.environ['KAKAO_REST_KEY']",
+    "serviceKey=YOUR_SERVICE_KEY_HERE_REPLACE_WITH_REAL_ONE",
+    "학번 입력란은 비워 두세요",
+    "patient 12345 was enrolled",
 ])
 def test_ignores(line):
     assert rules(line) == set()
