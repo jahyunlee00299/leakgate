@@ -57,6 +57,10 @@ def rules(text, **cfg):
     (lambda: "123허4567 렌터카", "kr-vehicle-plate"),
     (lambda: "학번: 2019123456", "kr-student-employee-id"),
     (lambda: "Employee ID #A1234567", "kr-student-employee-id"),
+    (lambda: "사번: ABC-2019-0457", "kr-student-employee-id"),
+    (lambda: f"twine upload dist/* -u __token__ -p pypi-{tok(60, AN + '-_')}", "pypi-token"),
+    (lambda: f"https://discord.com/api/webhooks/{rng.randint(10**17, 10**18)}/{tok(68)}", "discord-webhook"),
+    (lambda: f"Set-Cookie: sessionid={tok(32)}; Path=/; HttpOnly", "session-cookie"),
 ])
 def test_catches(line, rule):
     assert rule in rules(line())
@@ -98,6 +102,9 @@ def test_catches(line, rule):
     "serviceKey=YOUR_SERVICE_KEY_HERE_REPLACE_WITH_REAL_ONE",
     "학번 입력란은 비워 두세요",
     "patient 12345 was enrolled",
+    "Set-Cookie: theme=dark; Path=/",
+    "pip install pypi-simple-index",
+    "사번 발급 예정 (2024)",
 ])
 def test_ignores(line):
     assert rules(line) == set()

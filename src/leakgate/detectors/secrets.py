@@ -88,6 +88,13 @@ RULES: list[Rule] = [
      _not_placeholder),
     ("discord-bot-token", re.compile(
         _B + r"[A-Za-z0-9_\-]{24,28}\.[A-Za-z0-9_\-]{6}\.[A-Za-z0-9_\-]{27,38}" + _E), _not_placeholder),
+    ("pypi-token", re.compile(_B + r"pypi-[A-Za-z0-9_\-]{50,}" + _E), _not_placeholder),
+    ("discord-webhook", re.compile(
+        r"https://(?:ptb\.|canary\.)?discord(?:app)?\.com/api/webhooks/\d{15,20}/[A-Za-z0-9_\-]{50,}"), None),
+    # A session cookie is a bearer credential whatever its format.
+    ("session-cookie", re.compile(
+        r"(?i)(?:set-)?cookie\s*:[^\n]*?(?<![\w-])(?:session(?:id|_id)?|sid|connect\.sid|auth(?:_token)?|jsessionid"
+        r"|phpsessid|remember_token)=(?P<v>[A-Za-z0-9._~+/%\-]{20,}=*)"), _not_placeholder),
     ("docker-hub-token", re.compile(_B + r"dckr_(?:pat|oat)_[A-Za-z0-9_\-]{20,}" + _E), _not_placeholder),
     ("airtable-token", re.compile(_B + r"pat[A-Za-z0-9]{14}\.[a-f0-9]{64}" + _E), _not_placeholder),
     # No prefix: a Kakao REST/admin key is 32 hex characters, so only with its name nearby
@@ -133,6 +140,7 @@ def _register_gates() -> None:
         "url-embedded-password": "://", "bearer-token": "(?i)bearer", "discord-bot-token": r"\.[\w-]{6}\.",
         "aws-secret-key": "(?i)aws", "azure-account-key": "(?i)accountkey|sharedaccess",
         "credential-assignment": r"(?i)key|pat|token|secret|pass|pwd|비밀번호|패스워드|암호|인증키|토큰",
+        "pypi-token": "pypi-", "discord-webhook": "discord", "session-cookie": "(?i)cookie",
         "docker-hub-token": "dckr_", "airtable-token": r"pat\w{14}\.", "kakao-api-key": "(?i)kakao|카카오",
         "data-go-kr-service-key": "(?i)service_?key|서비스|인증키",
     }.items():

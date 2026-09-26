@@ -100,3 +100,20 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
 - **Honesty note**: heldout2 rose to 45/30/17 (FP 1) — but these rules came from the
   gap list heldout2 itself produced, so heldout2 is no longer blind for them. The
   honest number needs a new blind set (heldout3).
+
+## 0.2.0 — honest measurement (cross-cutting)
+- **heldout3** (`bench/heldout3.py`, 270 lines): written by a separate agent told not to
+  read src/tests/README/docs/other sets (it reported reading nothing but listing the
+  repo root to find `bench/`). Run once with the 0.2.0 rules frozen:
+  **49/60 secrets, 46/70 Korean PII, 23/30 infra, 0/110 FP**; 0.1.0 on the same set:
+  49/44/23/0.
+- **Then tuned on it** (so no longer blind): `pypi-token`, `discord-webhook`,
+  `session-cookie`, hyphenated `kr-student-employee-id` → 55/48/23/0. The four rules
+  hit 0 of 7 532 real code/text files; `pypi-token` found all 10 real PyPI tokens in a
+  live agent transcript.
+- **Not done, deliberately**: `ko-pii` is NOT auto-enabled when installed — a gate whose
+  result depends on what happens to be installed is not reproducible between machines;
+  it stays `--engine ko-pii`.
+- **Deferred**: unlisted names (messenger/author/romanized: 17 misses), health-insurance
+  numbers, cloud tenants beyond OneDrive/SharePoint (4 misses), usernames in some path
+  shapes (2). A heldout4 is needed before any of these are tuned.

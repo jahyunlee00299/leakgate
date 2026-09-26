@@ -159,10 +159,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--json")
     ap.add_argument("--only", action="append")
-    ap.add_argument("--set", choices=["dev", "heldout", "heldout2"], default="dev",
-                    help="dev = corpus the rules were tuned on; heldout = blind set written without seeing the rules")
+    ap.add_argument("--set", choices=["dev", "heldout", "heldout2", "heldout3"], default="dev",
+                    help="dev = corpus the rules were tuned on; heldout* = blind sets written without "
+                         "seeing the rules (heldout3 = the 0.2.0 honest number)")
     args = ap.parse_args()
-    C = {"dev": _c, "heldout": _h, "heldout2": _h2}[args.set].corpus()
+    sets = {"dev": _c, "heldout": _h, "heldout2": _h2}
+    if args.set == "heldout3":
+        import heldout3 as _h3  # noqa: E402  (imported lazily: written after 0.1.0)
+        sets["heldout3"] = _h3
+    C = sets[args.set].corpus()
     lines = [c[2] for c in C]
     results, skipped = {}, {}
     for name, fn in DETECTORS.items():

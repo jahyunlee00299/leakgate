@@ -34,16 +34,35 @@ and can call the specialised tools as extra engines.
 
 ## Benchmark
 
-`bench/run.py` scores every tool line by line on three synthetic corpora
+`bench/run.py` scores every tool line by line on four synthetic corpora
 (credentials generated at runtime, fictional people and organisations):
 
 - `dev` — the corpus the rules were written against (optimistic by construction),
 - `heldout` — a blind set written by an agent that never saw the rules; its
   misses were then used to fix general gaps, so it is no longer blind,
-- `heldout2` — a second blind set, first run **after** the rules were frozen.
-  This is the honest number.
+- `heldout2` — a second blind set, first run after the 0.1.0 rules were frozen;
+  its known gaps drove the 0.2.0 rules, so it is no longer blind either,
+- `heldout3` — a third blind set (270 lines), written for 0.2.0 by an agent that
+  read none of the sources, tests, README or other sets, first run **after** the
+  0.2.0 rules were frozen. **This is the honest number for 0.2.0.**
 
-`heldout2` (51 secrets, 36 Korean PII, 22 infra, 75 hard negatives):
+`heldout3` (60 secrets, 70 Korean PII, 30 infra, 110 hard negatives):
+
+| leakgate | Secrets | Korean PII | Infra | False positives |
+| --- | --- | --- | --- | --- |
+| 0.1.0 | 49 | 44 | 23 | 0 |
+| **0.2.0, rules frozen (the honest number)** | **49** | **46** | **23** | **0** |
+| 0.2.0 after fixing four general gaps it exposed | 55 | 48 | 23 | 0 |
+
+The four fixes (PyPI tokens, Discord webhooks, session cookies, hyphenated
+employee IDs) came from reading heldout3's misses, so the last row is not blind.
+What it still misses is mostly **names of people nobody listed**: 17 of the 22
+remaining Korean-PII misses are bare names in messenger logs, author lines and
+romanized form — list the people you know in `names` (see Configuration). The
+0.2.0 changes that matter most — reading inside documents, git history, the
+names list — are not line-level and do not show up in these tables at all.
+
+`heldout2` (51 secrets, 36 Korean PII, 22 infra, 75 hard negatives), 0.1.0:
 
 | Tool | Secrets | Korean PII | Infra | False positives |
 | --- | --- | --- | --- | --- |
@@ -61,9 +80,8 @@ positives, but **ko-pii is better at Korean PII**. Add it as an engine
 (`--engine ko-pii`) when PII recall matters more than noise. The FP hardening
 came from scanning 90 000 real site-packages files (floats read as card
 numbers, `result_key: "Name"` read as credentials) and cost three `heldout2`
-detections — a trade we chose deliberately. Known gaps: messenger-log and
-author-line names, vehicle plates, student/employee IDs, several vendor tokens
-with no fixed prefix (Kakao, 공공데이터포털, Airtable, Docker Hub).
+detections — a trade we chose deliberately. (0.1.0's known gaps — plates,
+student/employee IDs, Kakao/공공데이터포털/Airtable/Docker Hub keys — are rules in 0.2.0.)
 
 > **Windows note:** detect-secrets reads files with the locale codec, so on a
 > Korean Windows it silently reports **nothing** for any UTF-8 file containing
