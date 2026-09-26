@@ -48,6 +48,10 @@ def _rrn(m: re.Match) -> str | None:
     w = [2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5]
     check_ok = (11 - sum(int(a) * b for a, b in zip(digits, w)) % 11) % 10 == int(digits[12])
     ctx = re.search(r"주민|외국인등록|resident|RRN", m.string[max(0, m.start() - 20):m.start()], re.I)
+    if not re.search(r"\D", m.group("v")):
+        # 13 bare digits are as often a patent/DOI/order number (seen in real PDFs);
+        # without a separator, demand the checksum or a label.
+        return m.group("v") if (check_ok or ctx) else None
     return m.group("v") if (check_ok or ctx or g in (1, 2, 3, 4)) else None
 
 
@@ -131,8 +135,8 @@ RULES: list[Rule] = [
     ("email", re.compile(r"(?<![\w.+-])[A-Za-z0-9][\w.+-]*@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+"), _email),
     # Issuer prefix required (Visa 4, Mastercard 2/5, Amex 34/37, Discover/UnionPay 6,
     # JCB 35, Korean domestic 9) and ONE consistent separator throughout.
-    ("payment-card", re.compile(NL + r"(?:[2-69]\d{3}(?P<s>[-\s]?)\d{4}(?P=s)\d{4}(?P=s)\d{4}"
-                                     r"|3[47]\d{2}(?P<t>[-\s]?)\d{6}(?P=t)\d{5})" + NR), _luhn),
+    ("payment-card", re.compile(NL + r"(?<!\d[\s-])(?:[2-69]\d{3}(?P<s>[-\s]?)\d{4}(?P=s)\d{4}(?P=s)\d{4}"
+                                     r"|3[47]\d{2}(?P<t>[-\s]?)\d{6}(?P=t)\d{5})(?![\s-]\d)" + NR), _luhn),
     ("kr-business-reg-no", re.compile(NL + r"(?P<v>\d{3}-\d{2}-\d{5})" + NR), _brn),
     ("bank-account", re.compile(
         _ctx(r"계좌|은행|농협|국민|신한|우리|하나|기업|카카오뱅크|케이뱅크|토스|새마을|우체국|수협|신협|account")

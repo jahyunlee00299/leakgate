@@ -32,3 +32,24 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
   is hard-coded. Known values from json/.env/lines, never printed.
 - **Evidence**: `test_custom_dictionary_is_config_only`,
   `test_known_values_matched_and_never_printed`.
+
+## 0.2.0 — container formats (core)
+- **In/out**: `.docx/.xlsx/.pptx/.hwpx/.odt/.ods/.odp` (stdlib zip + XML), PDF (optional
+  pypdf), images (optional tesseract, `--ocr`) → segments `(where, text)` → the same
+  detectors; `Finding.where` names the part; authors → `document-author`.
+- **Fail-closed**: unreadable/opaque formats, scanned PDFs, partly-decoded PDFs
+  (pypdf `/UniKS-UTF16-H`), Office lock files → `UNSCANNED`, exit 2 unless
+  `--allow-unscanned`. Images without `--ocr` are a note, not a failure.
+- **Evidence**: `tests/test_containers.py` (17 cases: tracked deletion, comments, footer,
+  core properties, split runs, embedded xlsx, xlsx/pptx/odt, PDF text/metadata,
+  no-text-layer, missing reader, 6 unreadable formats, OCR missing, redact refusal,
+  clean doc, XML entity bomb refused by expat).
+- **Refutation**: four mutations (no deleted text / no author attrs / no embedded parts /
+  no text-layer check) each turned one test red. Real files: 217 documents in a
+  Downloads folder (180 PDF, 14 docx, 14 xlsx, 7 hwp, 2 pptx) — 0 crashes; exposed two
+  false positives in OLD rules (bare 13-digit numbers accepted as RRN on the gender
+  digit alone; a card number cut out of a longer digit run) and pypdf's silent partial
+  decode of Korean CMaps. All three fixed, pinned in tests; benchmark sets unchanged
+  (dev 22/14/8/6 FP 0, heldout2 43/27/17 FP 1).
+- **Deferred**: legacy `.hwp/.doc/.xls` readers (OLE compound files; reported
+  UNSCANNED); OCR of scanned PDFs; EXIF/GPS metadata in photos; a 40 MB PDF takes ~2 min.

@@ -76,6 +76,10 @@ def test_catches(line, rule):
     "AI 에이전트는 신입 연구원입니다",
     "chains to `.git/hooks/pre-commit.local` first",
     "`.claude/settings.local.json` is machine-local",
+    # false positives found scanning real PDFs (260926): bare 13-digit ids, digit runs
+    "patent 8001011234567, 1999.",
+    "1999/A:8001011234567",
+    "table 1 234 4539 1488 0343 6467 2345",
 ])
 def test_ignores(line):
     assert rules(line) == set()

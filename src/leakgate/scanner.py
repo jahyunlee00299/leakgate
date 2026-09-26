@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Iterator
 
+from leakgate import extract
 from leakgate.config import Config
 from leakgate.detectors.custom import CustomDictionaryDetector
 from leakgate.detectors.external import ENGINES
@@ -45,8 +46,11 @@ def is_binary(path: Path) -> bool:
 
 
 class Scanner:
-    def __init__(self, config: Config, extra_known: list[str] | None = None):
+    def __init__(self, config: Config, extra_known: list[str] | None = None, ocr: bool = False):
         self.config = config
+        self.ocr = ocr
+        self.unscanned: list[tuple[str, str]] = []     # (path, reason): text we could not read
+        self.images_skipped = 0
         self.detectors = []
         self.unavailable: list[str] = []
         cats = set(config.categories)
@@ -74,7 +78,7 @@ class Scanner:
         self.allow = [re.compile(a) for a in config.allow]
 
     # -- text -----------------------------------------------------------
-    def scan_text(self, text: str, path: str = "") -> list[Finding]:
+    def scan_text(self, text: str, path: str = "", where: str = "") -> list[Finding]:
         raw: list[Finding] = []
         for d in self.detectors:
             raw += d.scan(text)
@@ -85,7 +89,7 @@ class Scanner:
                 continue
             if any(a.search(f.value) for a in self.allow):
                 continue
-            kept.append(replace(f, path=path))
+            kept.append(replace(f, path=path, where=where))
         return _dedupe(kept)
 
     # -- files ----------------------------------------------------------
@@ -93,7 +97,7 @@ class Scanner:
         for t in targets:
             p = Path(t)
             if p.is_file():
-                if not is_binary(p):
+                if extract.kind(p) or not is_binary(p):
                     yield p
                 continue
             for root, dirs, files in os.walk(p):
@@ -105,6 +109,9 @@ class Scanner:
                            for g in self.config.exclude):
                         continue
                     try:
+                        if extract.kind(fp):
+                            yield fp
+                            continue
                         if fp.stat().st_size > MAX_BYTES or is_binary(fp):
                             continue
                     except OSError:
@@ -114,6 +121,22 @@ class Scanner:
     def scan_paths(self, targets: list[str]) -> tuple[list[Finding], int]:
         findings, n = [], 0
         for fp in self.iter_files(targets):
+            if extract.kind(fp):
+                if fp.suffix.lower() in extract.IMAGES and not self.ocr:
+                    self.images_skipped += 1
+                    continue
+                n += 1
+                ex = extract.extract(fp, ocr=self.ocr)
+                for where, text in ex.segments:
+                    seg = self.scan_text(text, str(fp), where)
+                    if "pii" in self.config.categories:
+                        seg += [Finding("pii", "document-author", ln, col, col + len(name), name,
+                                        path=str(fp), where=where)
+                                for ln, col, name in extract.people(where, text)]
+                    findings += _dedupe(seg)
+                if ex.unscanned:
+                    self.unscanned.append((str(fp), ex.unscanned))
+                continue
             n += 1
             text = fp.read_text(encoding="utf-8", errors="replace")
             findings += self.scan_text(text, str(fp))
@@ -128,7 +151,8 @@ def _dedupe(findings: list[Finding]) -> list[Finding]:
     """Keep one finding per overlapping span on a line (highest priority, then longest)."""
     out: list[Finding] = []
     for f in sorted(findings, key=_rank):
-        if any(o.line == f.line and o.start < f.end and f.start < o.end for o in out):
+        if any(o.where == f.where and o.line == f.line and o.start < f.end and f.start < o.end
+               for o in out):
             continue
         out.append(f)
-    return sorted(out, key=lambda f: (f.path, f.line, f.start))
+    return sorted(out, key=lambda f: (f.path, f.where, f.line, f.start))

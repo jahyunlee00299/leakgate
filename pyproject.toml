@@ -19,6 +19,7 @@ Issues = "https://github.com/jahyunlee00299/leakgate/issues"
 
 [project.optional-dependencies]
 korean = ["maskingtape>=0.3", "ko-pii>=1.16"]
+pdf = ["pypdf>=4"]
 dev = ["pytest>=8"]
 
 [project.scripts]

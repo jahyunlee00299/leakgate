@@ -20,6 +20,7 @@ class Finding:
     value: str = field(repr=False)
     engine: str = "builtin"
     path: str = ""
+    where: str = ""        # location inside a container file, e.g. "word/comments.xml"
 
     @property
     def masked(self) -> str:

@@ -35,6 +35,9 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--category", action="append", default=[], metavar="CAT",
                    help="restrict to secret/pii/infra/custom; repeatable")
     p.add_argument("--allow-missing-engines", action="store_true")
+    p.add_argument("--ocr", action="store_true", help="read images with tesseract (kor+eng)")
+    p.add_argument("--allow-unscanned", action="store_true",
+                   help="do not fail (exit 2) on files that hold text leakgate cannot read")
 
 
 def _build(args) -> Scanner:
@@ -44,7 +47,7 @@ def _build(args) -> Scanner:
         cfg.engines = sorted(set(cfg.engines) | set(args.engine))
     if args.category:
         cfg.categories = args.category
-    sc = Scanner(cfg, extra_known=args.known_secrets)
+    sc = Scanner(cfg, extra_known=args.known_secrets, ocr=args.ocr)
     if sc.unavailable and not args.allow_missing_engines:
         raise SystemExit("leakgate: requested engine unavailable — " + "; ".join(sc.unavailable)
                          + " (use --allow-missing-engines to continue without it)")
@@ -57,7 +60,11 @@ def cmd_scan(args) -> int:
         findings, n = sc.scan_text(sys.stdin.read(), "<stdin>"), 1
     else:
         findings, n = sc.scan_paths(args.paths)
-    print(report.RENDERERS[args.format](findings, n, sc.unavailable))
+    print(report.RENDERERS[args.format](findings, n, sc.unavailable, sc.unscanned, sc.images_skipped))
+    if sc.unscanned and not args.allow_unscanned:
+        print(f"leakgate: {len(sc.unscanned)} file(s) could not be read — failing closed "
+              "(--allow-unscanned to accept)", file=sys.stderr)
+        return 2
     return 1 if findings else 0
 
 
@@ -66,7 +73,10 @@ def cmd_redact(args) -> int:
     findings, n = sc.scan_paths(args.paths)
     by_file = defaultdict(list)
     for f in findings:
-        by_file[f.path].append(f)
+        if not f.where:
+            by_file[f.path].append(f)
+    for path in sorted({f.path for f in findings if f.where}):
+        print(f"cannot redact inside {path} — fix it in the source application", file=sys.stderr)
     failed = 0
     for path, fs in sorted(by_file.items()):
         if not args.apply:
@@ -82,7 +92,8 @@ def cmd_redact(args) -> int:
     print(f"\nleakgate redact ({mode}): {total} span(s) in {len(by_file)} of {n} file(s)"
           + (f", {failed} file(s) skipped as unsafe" if failed else ""))
     if args.apply:
-        left, _ = sc.scan_paths([p for p in by_file])
+        left, _ = sc.scan_paths(list(by_file)) if by_file else ([], 0)
+        left = [f for f in left if not f.where]
         print(f"leakgate redact: {len(left)} finding(s) remain after re-scan")
         return 2 if failed or left else 0
     return 1 if total else 0

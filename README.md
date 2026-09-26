@@ -81,6 +81,26 @@ leakgate redact ~/.claude/projects --apply --backup  # mask agent transcripts
 leakgate init                            # write a commented .leakgate.toml
 ```
 
+### Documents: Word, Excel, PowerPoint, HWPX, OpenDocument, PDF, images
+
+A manuscript leaks where nobody looks, so container files are opened, not
+skipped. From `.docx/.xlsx/.pptx/.hwpx/.odt` leakgate reads the body, **tracked
+deletions** (text you deleted is still in the file), comments, headers and
+footers, footnotes, speaker notes, chart data, embedded workbooks, and the
+**author fields** (document properties, tracked-change and comment authors) —
+every named author is reported as `document-author`. Findings say where:
+`paper.docx [word/comments.xml]:1:9`.
+
+PDFs need `pip install "leakgate[pdf]"` (pages, annotations, metadata). Images
+are read only with `--ocr` (needs the `tesseract` binary, `kor+eng`).
+
+A file that can hold text but cannot be read — legacy `.doc/.hwp/.xls`, an
+archive, a scanned PDF with no text layer, a PDF whose Korean encoding pypdf
+cannot decode, an Office lock file `~$…` (it stores the editor's user name) —
+is listed as `UNSCANNED` and the run exits **2**. Pass `--allow-unscanned` to
+accept that knowingly. Redaction never rewrites a container: fix it in the
+application that made it.
+
 Redaction keeps files usable: `C:\Users\<you>\proj` becomes
 `C:\Users\<USER>\proj`, a key becomes `[REDACTED:github-token]`. It never opens
 binaries, writes atomically, refuses to write a JSON/JSONL file that would stop
