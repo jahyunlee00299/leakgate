@@ -117,3 +117,14 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
 - **Deferred**: unlisted names (messenger/author/romanized: 17 misses), health-insurance
   numbers, cloud tenants beyond OneDrive/SharePoint (4 misses), usernames in some path
   shapes (2). A heldout4 is needed before any of these are tuned.
+
+## 0.2.1 — pre-push hook scoped per remote (fix)
+- **Bug found wiring the hook into real repos**: for a new branch the hook scanned
+  `<sha> --not --remotes`; after a push to a private `origin`, the same commits counted
+  as "already on a remote" and a push to the `public` mirror was not scanned at all.
+  Now `--not --remotes=<target remote>`.
+- **Added** `hook install --remote NAME` (repeatable): scan only pushes to those
+  remotes, so a private origin is not blocked for private terms; names are validated
+  (`a;rm` → exit 2) because they are written into a shell script.
+- **Evidence**: `test_hook_only_for_named_remote` — push to origin passes, the same
+  commits to public are blocked. It failed on 0.2.0 before the fix.

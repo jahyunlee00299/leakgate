@@ -109,12 +109,17 @@ HOOK = """#!/bin/sh
 {mark}
 # Scans only the commits being pushed; blocks the push on any finding.
 # Bypass once with: git push --no-verify
+remotes="{remotes}"
+if [ -n "$remotes" ]; then
+  case " $remotes " in *" $1 "*) ;; *) exit 0 ;; esac
+fi
 z=0000000000000000000000000000000000000000
 status=0
 while read local_ref local_sha remote_ref remote_sha; do
   [ "$local_sha" = "$z" ] && continue
   if [ "$remote_sha" = "$z" ]; then
-    rev="$local_sha --not --remotes"
+    # new branch: everything this remote does not have yet (another remote having it is no excuse)
+    rev="$local_sha --not --remotes=$1"
   else
     rev="$remote_sha..$local_sha"
   fi
@@ -124,7 +129,8 @@ exit $status
 """
 
 
-def install_hook(repo: Path, extra: list[str], force: bool = False) -> Path:
+def install_hook(repo: Path, extra: list[str], force: bool = False, remotes: list[str] = ()) -> Path:
+    """`remotes` limits the hook to pushes to those remotes (e.g. only the public mirror)."""
     r = _git(Path(repo), "rev-parse", "--git-path", "hooks")
     if r.returncode != 0:
         raise RuntimeError(f"{repo} is not a git repository")
@@ -134,7 +140,9 @@ def install_hook(repo: Path, extra: list[str], force: bool = False) -> Path:
         raise RuntimeError(f"{hook} exists and was not written by leakgate (use --force to replace)")
     hooks.mkdir(parents=True, exist_ok=True)
     python = Path(sys.executable).as_posix()
-    hook.write_text(HOOK.format(mark=HOOK_MARK, python=python,
+    if any(not r.replace("-", "").replace("_", "").replace(".", "").isalnum() for r in remotes):
+        raise ValueError("remote names may contain only letters, digits, '-', '_' and '.'")
+    hook.write_text(HOOK.format(mark=HOOK_MARK, python=python, remotes=" ".join(remotes),
                                 extra=" ".join(shlex.quote(a) for a in extra)), encoding="utf-8", newline="\n")
     hook.chmod(0o755)
     return hook

@@ -106,7 +106,8 @@ def cmd_redact(args) -> int:
 
 
 def cmd_hook(args) -> int:
-    hook = history.install_hook(Path(args.repo), shlex.split(args.scan_args), force=args.force)
+    hook = history.install_hook(Path(args.repo), shlex.split(args.scan_args), force=args.force,
+                                remotes=args.remote)
     print(f"wrote {hook} — pushes are scanned for what they add (bypass once: git push --no-verify)")
     return 0
 
@@ -145,6 +146,8 @@ def main(argv: list[str] | None = None) -> int:
     h.add_argument("action", choices=["install"])
     h.add_argument("repo", nargs="?", default=".")
     h.add_argument("--force", action="store_true", help="replace a pre-push hook leakgate did not write")
+    h.add_argument("--remote", action="append", default=[],
+                   help="only scan pushes to this remote (repeatable), e.g. --remote public")
     h.add_argument("--scan-args", default="",
                    help="extra `scan` options for the hook, e.g. --scan-args=\"--known-secrets ~/s.json\" (use =)")
     h.set_defaults(func=cmd_hook)

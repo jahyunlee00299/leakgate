@@ -125,6 +125,19 @@ def test_pre_push_hook_blocks_a_leaking_push(repo, tmp_path, capsys):
     assert git(remote, "log", "--oneline", "main").count("\n") == 0   # remote still has 1 commit
 
 
+def test_hook_only_for_named_remote(repo, tmp_path, capsys):
+    for name in ("origin", "public"):
+        subprocess.run(["git", "init", "-q", "--bare", str(tmp_path / f"{name}.git")], check=True, env=ENV)
+        git(repo, "remote", "add", name, str(tmp_path / f"{name}.git"))
+    commit(repo, {"leak.txt": f"ghp_{tok(36)}\n"}, "leak")
+    assert main(["hook", "install", str(repo), "--remote", "public"]) == 0
+    push = lambda r: subprocess.run(["git", "-C", str(repo), "push", "-q", r, "main"],  # noqa: E731
+                                    capture_output=True, text=True, encoding="utf-8", env=ENV).returncode
+    assert push("origin") == 0          # private remote: not scanned
+    assert push("public") != 0          # public mirror: blocked
+    assert main(["hook", "install", str(repo), "--force", "--remote", "a;rm"]) == 2
+
+
 def test_hook_refuses_to_clobber_a_foreign_hook(repo, capsys):
     hook = repo / ".git" / "hooks" / "pre-push"
     hook.parent.mkdir(parents=True, exist_ok=True)

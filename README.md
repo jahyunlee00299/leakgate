@@ -167,7 +167,8 @@ A secret removed in a later commit is still in every clone. `scan --history`
 reads what each commit **added** (so a value is reported once, at the commit
 that introduced it, with its line number there), including documents committed
 and later deleted. `hook install` adds a pre-push hook that scans only the
-outgoing commits; pass hook options with `--scan-args="--known-secrets ~/s.json"`.
+outgoing commits; pass hook options with `--scan-args="--known-secrets ~/s.json"`,
+and `--remote public` to scan only pushes to a public mirror.
 Finding a leak in history means rewriting it (git-filter-repo) **and revoking
 the credential** — redaction is never a substitute for rotation. Name
 detection is rule-based (titles, labels, lists): a bare name in running prose
