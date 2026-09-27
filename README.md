@@ -1,8 +1,8 @@
-# leakgate
+# Leakgate
 
-A pre-publish gate for what generic secret scanners miss: **Korean personal
+A pre-publish gate for what generic secret scanners miss: Korean personal
 data, local usernames and internal hosts, and your organisation's unpublished
-terms** — alongside ordinary API keys. Built for researchers who publish code,
+terms, alongside ordinary API keys. Built for researchers who publish code,
 notebooks and AI-agent transcripts (Claude Code / Codex JSONL).
 
 ```bash
@@ -13,15 +13,15 @@ leakgate redact logs/ --apply        # mask in place, JSONL-safe
 
 ## Why another scanner
 
-Excellent scanners already exist, and leakgate does not try to replace them:
+Excellent scanners already exist, and Leakgate does not try to replace them:
 [gitleaks](https://github.com/gitleaks/gitleaks) for vendor secrets,
 [maskingtape](https://github.com/ChoHyeonChan/maskingtape) and
 [ko-pii](https://github.com/Marker-Inc-Korea/ko-pii) for Korean PII,
 [neuralyzer](https://github.com/sandeepsirodia/neuralyzer) for agent
 transcripts. Each covers one axis. A repository you are about to make public
-leaks on all of them at once — a traceback with `C:\Users\<you>`, a meeting
+leaks on all of them at once: a traceback with `C:\Users\<you>`, a meeting
 note with a colleague's phone number, an unpublished compound name, an API key
-a helper script echoed into a log. leakgate checks all four axes in one pass
+a helper script echoed into a log. Leakgate checks all four axes in one pass
 and can call the specialised tools as extra engines.
 
 | Axis | What it catches |
@@ -48,7 +48,7 @@ and can call the specialised tools as extra engines.
 
 `heldout3` (60 secrets, 70 Korean PII, 30 infra, 110 hard negatives):
 
-| leakgate | Secrets | Korean PII | Infra | False positives |
+| Leakgate | Secrets | Korean PII | Infra | False positives |
 | --- | --- | --- | --- | --- |
 | 0.1.0 | 49 | 44 | 23 | 0 |
 | **0.2.0, rules frozen (the honest number)** | **49** | **46** | **23** | **0** |
@@ -58,16 +58,16 @@ The four fixes (PyPI tokens, Discord webhooks, session cookies, hyphenated
 employee IDs) came from reading heldout3's misses, so the last row is not blind.
 What it still misses is mostly **names of people nobody listed**: 17 of the 22
 remaining Korean-PII misses are bare names in messenger logs, author lines and
-romanized form — list the people you know in `names` (see Configuration). The
-0.2.0 changes that matter most — reading inside documents, git history, the
-names list — are not line-level and do not show up in these tables at all.
+romanized form. List the people you know in `names` (see Configuration). The
+0.2.0 changes that matter most (reading inside documents, git history, the
+names list) are not line-level and do not show up in these tables at all.
 
 `heldout2` (51 secrets, 36 Korean PII, 22 infra, 75 hard negatives), 0.1.0:
 
 | Tool | Secrets | Korean PII | Infra | False positives |
 | --- | --- | --- | --- | --- |
-| **leakgate** (rules frozen) | **46** | 27 | **18** | 2 |
-| **leakgate** (current, after real-world FP hardening) | 43 | 27 | 17 | **1** |
+| **Leakgate** (rules frozen) | **46** | 27 | **18** | 2 |
+| **Leakgate** (current, after real-world FP hardening) | 43 | 27 | 17 | **1** |
 | gitleaks 8.30.1 | 32 | 0 | 0 | 1 |
 | neuralyzer | 35 | 0 | 0 | 5 |
 | detect-secrets 1.5.0 | 23 | 0 | 0 | 4 |
@@ -75,12 +75,12 @@ names list — are not line-level and do not show up in these tables at all.
 | ko-pii 1.16.0 | 10 | **32** | 8 | 13 |
 | maskingtape 0.3.0 (rules only) | 8 | 27 | 0 | 3 |
 
-Read it plainly: leakgate leads on secrets and infra with the fewest false
+Read it plainly: Leakgate leads on secrets and infra with the fewest false
 positives, but **ko-pii is better at Korean PII**. Add it as an engine
 (`--engine ko-pii`) when PII recall matters more than noise. The FP hardening
 came from scanning 90 000 real site-packages files (floats read as card
 numbers, `result_key: "Name"` read as credentials) and cost three `heldout2`
-detections — a trade we chose deliberately. (0.1.0's known gaps — plates,
+detections, a trade we chose deliberately. (0.1.0's known gaps: plates,
 student/employee IDs, Kakao/공공데이터포털/Airtable/Docker Hub keys — are rules in 0.2.0.)
 
 > **Windows note:** detect-secrets reads files with the locale codec, so on a
@@ -105,11 +105,11 @@ leakgate init                            # write a commented .leakgate.toml
 ### Documents: Word, Excel, PowerPoint, HWPX, OpenDocument, PDF, images
 
 A manuscript leaks where nobody looks, so container files are opened, not
-skipped. From `.docx/.xlsx/.pptx/.hwpx/.odt` leakgate reads the body, **tracked
+skipped. From `.docx/.xlsx/.pptx/.hwpx/.odt` Leakgate reads the body, **tracked
 deletions** (text you deleted is still in the file), comments, headers and
 footers, footnotes, speaker notes, chart data, embedded workbooks, and the
-**author fields** (document properties, tracked-change and comment authors) —
-every named author is reported as `document-author`. Findings say where:
+**author fields** (document properties, tracked-change and comment authors).
+Every named author is reported as `document-author`. Findings say where:
 `paper.docx [word/comments.xml]:1:9`.
 
 PDFs need `pip install "leakgate[pdf]"` (pages, annotations, metadata). Images
@@ -170,7 +170,7 @@ and later deleted. `hook install` adds a pre-push hook that scans only the
 outgoing commits; pass hook options with `--scan-args="--known-secrets ~/s.json"`,
 and `--remote public` to scan only pushes to a public mirror.
 Finding a leak in history means rewriting it (git-filter-repo) **and revoking
-the credential** — redaction is never a substitute for rotation. Name
+the credential**. Redaction is never a substitute for rotation. Name
 detection is rule-based (titles, labels, lists): a bare name in running prose
 is not caught unless it is in your `names` list.
 
