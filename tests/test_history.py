@@ -138,6 +138,19 @@ def test_hook_only_for_named_remote(repo, tmp_path, capsys):
     assert main(["hook", "install", str(repo), "--force", "--remote", "a;rm"]) == 2
 
 
+def test_remote_filter_fails_closed_on_a_push_by_url(repo, tmp_path, capsys):
+    """git hands the hook the URL, not the name, for `git push <url>`: a name filter must not read that as 'other remote'."""
+    for name in ("origin", "public"):
+        subprocess.run(["git", "init", "-q", "--bare", str(tmp_path / f"{name}.git")], check=True, env=ENV)
+        git(repo, "remote", "add", name, str(tmp_path / f"{name}.git"))
+    commit(repo, {"leak.txt": f"ghp_{tok(36)}\n"}, "leak")
+    assert main(["hook", "install", str(repo), "--remote", "public"]) == 0
+    push = lambda r: subprocess.run(["git", "-C", str(repo), "push", "-q", r, "main"],  # noqa: E731
+                                    capture_output=True, text=True, encoding="utf-8", env=ENV).returncode
+    assert push(str(tmp_path / "public.git")) != 0      # the public mirror addressed by URL: still scanned
+    assert push("origin") == 0                          # a named, unlisted remote: still skipped
+
+
 def test_hook_refuses_to_clobber_a_foreign_hook(repo, capsys):
     hook = repo / ".git" / "hooks" / "pre-push"
     hook.parent.mkdir(parents=True, exist_ok=True)

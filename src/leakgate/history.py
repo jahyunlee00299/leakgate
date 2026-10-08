@@ -111,7 +111,11 @@ HOOK = """#!/bin/sh
 # Bypass once with: git push --no-verify
 remotes="{remotes}"
 if [ -n "$remotes" ]; then
-  case " $remotes " in *" $1 "*) ;; *) exit 0 ;; esac
+  case " $remotes " in
+    *" $1 "*) ;;
+    *) # $1 is the URL for `git push <url>`: only a configured remote name may be skipped (fail closed)
+       git remote | grep -qxF -- "$1" && exit 0 ;;
+  esac
 fi
 z=0000000000000000000000000000000000000000
 status=0

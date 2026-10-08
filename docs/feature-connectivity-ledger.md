@@ -128,3 +128,13 @@ One entry per delivered unit: scope, layer, inputs/outputs, evidence, refutation
   (`a;rm` → exit 2) because they are written into a shell script.
 - **Evidence**: `test_hook_only_for_named_remote` — push to origin passes, the same
   commits to public are blocked. It failed on 0.2.0 before the fix.
+
+## 0.2.2 (proposal) - remote filter fails closed on a push by URL (fix)
+- **Gap found by reading the 0.2.1 hook**: `git push <url>` hands the hook the URL as `$1`; the `--remote` name
+  filter read "not in my list" and exited 0, so a public mirror addressed by URL was never scanned.
+- **Now**: only an argument that is a configured remote NAME and not in the list is skipped; anything else
+  (a URL, an unknown name) is scanned.
+- **Evidence**: `test_remote_filter_fails_closed_on_a_push_by_url` failed on 0.2.1 (push by URL succeeded with a
+  token in the commit), passes now; the named-but-unlisted remote is still skipped; 118 tests pass.
+- **Deferred**: a push by URL to a PRIVATE remote is now scanned too (slower, may block on private terms);
+  resolving the URL back to a remote name via `git remote get-url` would restore the skip. Version bump left to the maintainer.
